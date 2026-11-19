@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pencatat Keuangan</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --income: #16a34a;
+      --expense: #dc2626;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px 16px;
+    }
+
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+    }
+
+    .btn-reset {
+      background: transparent;
+      color: var(--expense);
+      border: 1px solid var(--expense);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .btn-reset:hover {
+      background: var(--expense);
+      color: #fff;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .card .label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .card .value {
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+
+    .value.income { color: var(--income); }
+    .value.expense { color: var(--expense); }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr 150px 180px auto;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 680px) {
+      form {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    input, select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: #fff;
+      color: var(--text);
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid rgba(37, 99, 235, 0.25);
+      border-color: var(--primary);
+    }
+
+    .btn-add {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 11px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    .btn-add:hover {
+      background: #1d4ed8;
+    }
+
+    .history-title {
+      font-size: 1.05rem;
+      margin-bottom: 12px;
+    }
+
+    .tx-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tx-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--border);
+      border-radius: 10px;
+      gap: 12px;
+    }
+
+    .tx-item.income { border-left-color: var(--income); }
+    .tx-item.expense { border-left-color: var(--expense); }
+
+    .tx-info .title {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .tx-info .date {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .tx-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tx-amount {
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .tx-amount.income { color: var(--income); }
+    .tx-amount.expense { color: var(--expense); }
+
+    .btn-del {
+      background: #fee2e2;
+      color: var(--expense);
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 28px;
+      background: var(--card);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Pencatat Keuangan</h1>
+      <button type="button" class="btn-reset" id="resetBtn">Reset Data</button>
+    </header>
+
+    <section class="summary">
+      <div class="card">
+        <div class="label">Sisa Saldo</div>
+        <div class="value" id="balanceEl">Rp0</div>
+      </div>
+      <div class="card">
+        <div class="label">Total Pemasukan</div>
+        <div class="value income" id="incomeEl">Rp0</div>
+      </div>
+      <div class="card">
+        <div class="label">Total Pengeluaran</div>
+        <div class="value expense" id="expenseEl">Rp0</div>
+      </div>
+    </section>
+
+    <section class="card" style="margin-bottom: 20px;">
+      <form id="txForm">
+        <input type="text" id="descInput" placeholder="Keterangan (mis. Jajan, Gaji)" required />
+        <input type="text" id="amountInput" inputmode="numeric" placeholder="Nominal (mis. 15.000)" required />
+        <select id="typeInput">
+          <option value="expense">Pengeluaran (-)</option>
+          <option value="income">Pemasukan (+)</option>
+        </select>
+        <button type="submit" class="btn-add">Simpan</button>
+      </form>
+    </section>
+
+    <h2 class="history-title">Riwayat Transaksi</h2>
+    <ul class="tx-list" id="txList"></ul>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "pencatat_keuangan_v1";
+
+    const descInput = document.getElementById("descInput");
+    const amountInput = document.getElementById("amountInput");
+    const typeInput = document.getElementById("typeInput");
+    const txForm = document.getElementById("txForm");
+    const txList = document.getElementById("txList");
+    const balanceEl = document.getElementById("balanceEl");
+    const incomeEl = document.getElementById("incomeEl");
+    const expenseEl = document.getElementById("expenseEl");
+    const resetBtn = document.getElementById("resetBtn");
+
+    let transactions = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+    function formatRupiah(num) {
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        maximumFractionDigits: 0
+      }).format(num);
+    }
+
+    function parseDigits(str) {
+      const cleaned = str.replace(/\D/g, "");
+      return cleaned ? Number(cleaned) : 0;
+    }
+
+    amountInput.addEventListener("input", () => {
+      const num = parseDigits(amountInput.value);
+      amountInput.value = num > 0 ? num.toLocaleString("id-ID") : "";
+    });
+
+    function saveAndRender() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+      render();
+    }
+
+    function render() {
+      const totalIncome = transactions
+        .filter((t) => t.type === "income")
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const totalExpense = transactions
+        .filter((t) => t.type === "expense")
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const balance = totalIncome - totalExpense;
+
+      balanceEl.textContent = formatRupiah(balance);
+      incomeEl.textContent = formatRupiah(totalIncome);
+      expenseEl.textContent = formatRupiah(totalExpense);
+
+      if (transactions.length === 0) {
+        txList.innerHTML = '<li class="empty">Belum ada transaksi tercatat.</li>';
+        return;
+      }
+
+      txList.innerHTML = transactions
+        .map(
+          (tx) => `
+          <li class="tx-item ${tx.type}">
+            <div class="tx-info">
+              <div class="title">${escapeHtml(tx.desc)}</div>
+              <div class="date">${escapeHtml(tx.date)}</div>
+            </div>
+            <div class="tx-right">
+              <span class="tx-amount ${tx.type}">
+                ${tx.type === "income" ? "+" : "-"}${formatRupiah(tx.amount)}
+              </span>
+              <button type="button" class="btn-del" onclick="deleteTx('${tx.id}')">Hapus</button>
+            </div>
+          </li>
+        `
+        )
+        .join("");
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    txForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const desc = descInput.value.trim();
+      const amount = parseDigits(amountInput.value);
+      const type = typeInput.value;
+
+      if (!desc || amount <= 0) return;
+
+      const now = new Date().toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      });
+
+      transactions.unshift({
+        id: String(Date.now()),
+        desc,
+        amount,
+        type,
+        date: now
+      });
+
+      descInput.value = "";
+      amountInput.value = "";
+      descInput.focus();
+      saveAndRender();
+    });
+
+    window.deleteTx = function (id) {
+      transactions = transactions.filter((t) => t.id !== id);
+      saveAndRender();
+    };
+
+    resetBtn.addEventListener("click", () => {
+      if (transactions.length === 0) return;
+      if (confirm("Hapus semua riwayat transaksi?")) {
+        transactions = [];
+        saveAndRender();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
